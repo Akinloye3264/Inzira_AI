@@ -1,0 +1,16 @@
+
+# NISR dataset - do not upload raw survey files
+Microdata.zip
+*.dta
+Cross_Section/
+
+# Jupyter temporary files
+.ipynb_checkpoints/
+__pycache__/
+
+# TensorBoard training logs
+logs/
+
+# Environment and system files
+.env
+.DS_Store
