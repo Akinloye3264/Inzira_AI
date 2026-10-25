@@ -1,0 +1,107 @@
+{
+  "release_name": "inzira_lite_v1_20261024_235457",
+  "created_utc": "2026-10-24T23:54:57.656725+00:00",
+  "file_count": 20,
+  "files": [
+    {
+      "path": "content/human_readable_feature_dictionary.csv",
+      "size_bytes": 1573,
+      "sha256": "38d120fcbb3366f3b61853260070a18e03a5043b8e620cbd63aced6104c1096d"
+    },
+    {
+      "path": "content/intervention_catalogue.json",
+      "size_bytes": 3895,
+      "sha256": "7f595a63c8c7d3126c8db68539a40b690dfd3da8266a53e8566be440d8047f01"
+    },
+    {
+      "path": "content/inzira_kinyarwanda_audio_manifest.json",
+      "size_bytes": 642,
+      "sha256": "c9ac2378b3e923492d2ab1bad03868639e78621355bc42e4c1453bcf62f43f0d"
+    },
+    {
+      "path": "content/inzira_lite_fairness_policy.json",
+      "size_bytes": 3646,
+      "sha256": "f8d056a45aff6755f210d3a94a56c49357358d05cf0724adccd9e0cd5bc46ad4"
+    },
+    {
+      "path": "content/inzira_ui_translations_draft.json",
+      "size_bytes": 9502,
+      "sha256": "6829b0244a3eaa076160b5fa8fb58a4207cd183a99d9ee85b01fb8e38753e8c5"
+    },
+    {
+      "path": "content/lite_ui_feature_schema.json",
+      "size_bytes": 4304,
+      "sha256": "92c677b11b518332fb78a4f005535c51cce18e7ea33307ed5cc06bec63a926c3"
+    },
+    {
+      "path": "deployment_notice.json",
+      "size_bytes": 526,
+      "sha256": "7369f79b8e1d901d7c97144c842a31a655c471a7bc499da6d6d99b23dbdb922e"
+    },
+    {
+      "path": "docs/MODEL_CARD.md",
+      "size_bytes": 3055,
+      "sha256": "3dba83928c43c0b75732ade029dd9d5c0ed5d0c0499129283c8c77a252159431"
+    },
+    {
+      "path": "docs/inzira_kinyarwanda_translation_review.csv",
+      "size_bytes": 8070,
+      "sha256": "7a01f9584d28fc3f0e6faac8452f67017d62a9106569234df1944887cf963476"
+    },
+    {
+      "path": "evaluation/inzira_lite_fairness_audit.csv",
+      "size_bytes": 3437,
+      "sha256": "b0fab1d10143e619289629266e6dd02cf3b55eb0bf92025b3154112833620f05"
+    },
+    {
+      "path": "evaluation/inzira_lite_fairness_audit.png",
+      "size_bytes": 141445,
+      "sha256": "2d9730d0ab1e60624bbf3a1bb1a3bc23a0e82200a28e307e4817921d80315f38"
+    },
+    {
+      "path": "evaluation/inzira_lite_fairness_disparities.csv",
+      "size_bytes": 436,
+      "sha256": "3ccf45b86b288e60b2102823524a81bcf35ce02e6408f908356893e94d0d461f"
+    },
+    {
+      "path": "evaluation/inzira_lite_final_test_evaluation.png",
+      "size_bytes": 120981,
+      "sha256": "806d1648932383b58358eadcff242c8dde865ae24836c4e33ce2e330f5077b40"
+    },
+    {
+      "path": "evaluation/inzira_lite_final_test_results.json",
+      "size_bytes": 3745,
+      "sha256": "4ed449e9b82bdfd4e240fed7065b22ce470def544ef039b9f05cc34e6c69812c"
+    },
+    {
+      "path": "evaluation/inzira_lite_missing_answer_robustness.csv",
+      "size_bytes": 783,
+      "sha256": "2109bcc02c7ee35f819959f58709de15a4e8aa324e5442e4edc7a6ef8a921488"
+    },
+    {
+      "path": "evaluation/inzira_lite_test_robustness.csv",
+      "size_bytes": 948,
+      "sha256": "5fadbc21e84abfd671029071135c3ec71ca7d1bf1dd8ef6a328ba3ab45f42924"
+    },
+    {
+      "path": "evaluation/inzira_lite_validation_ranking.csv",
+      "size_bytes": 1197,
+      "sha256": "ab6494928cb2bce2ea196b2a52d2df4d2e4f7e8dcc922bc95d6d49074cedf5ef"
+    },
+    {
+      "path": "models/inzira_lite_configuration.json",
+      "size_bytes": 3955,
+      "sha256": "12cf5b6831fc5e5feb49dbe7d78433909505a489b7a780e813689832a5166032"
+    },
+    {
+      "path": "models/inzira_lite_model.joblib",
+      "size_bytes": 755885,
+      "sha256": "38c574a326a94628ef477efac05124838e861ba9f9fa07b98465c0cf7d47d346"
+    },
+    {
+      "path": "models/inzira_lite_preprocessor.joblib",
+      "size_bytes": 6084,
+      "sha256": "6e055fe5cb83bdf5ea3f11b15505556be37d3fa4b748e33b9a40e4c1b60599fe"
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "model_name": "Compact XGBoost",
+  "threshold": 0.4900000000000002,
+  "target": "vulnerable_vs_non_poor",
+  "positive_class": "Vulnerable",
+  "input_features": [
+    "province",
+    "ur",
+    "household_members",
+    "children_count",
+    "working_age_count",
+    "elderly_count",
+    "sleeping_rooms",
+    "crowding_ratio",
+    "dependency_ratio",
+    "floor_material",
+    "electricity_access",
+    "livestock_ownership",
+    "log_livestock_count",
+    "mobile_phone",
+    "recent_internet_use",
+    "insured_share",
+    "agricultural_activity",
+    "wage_employment",
+    "nonfarm_business"
+  ],
+  "categorical_features": [
+    "province",
+    "ur",
+    "floor_material"
+  ],
+  "numerical_features": [
+    "household_members",
+    "children_count",
+    "working_age_count",
+    "elderly_count",
+    "sleeping_rooms",
+    "crowding_ratio",
+    "dependency_ratio",
+    "electricity_access",
+    "livestock_ownership",
+    "log_livestock_count",
+    "mobile_phone",
+    "recent_internet_use",
+    "insured_share",
+    "agricultural_activity",
+    "wage_employment",
+    "nonfarm_business"
+  ],
+  "processed_feature_count": 49,
+  "livestock_feature": "log_livestock_count",
+  "question_groups": {
+    "location": [
+      "province",
+      "ur"
+    ],
+    "household_composition": [
+      "household_members",
+      "children_count",
+      "working_age_count",
+      "elderly_count",
+      "dependency_ratio"
+    ],
+    "sleeping_rooms": [
+      "sleeping_rooms",
+      "crowding_ratio"
+    ],
+    "floor_material": [
+      "floor_material"
+    ],
+    "electricity": [
+      "electricity_access"
+    ],
+    "livestock": [
+      "livestock_ownership",
+      "log_livestock_count"
+    ],
+    "mobile_phone": [
+      "mobile_phone"
+    ],
+    "internet": [
+      "recent_internet_use"
+    ],
+    "insurance": [
+      "insured_share"
+    ],
+    "agriculture": [
+      "agricultural_activity"
+    ],
+    "wage_employment": [
+      "wage_employment"
+    ],
+    "business": [
+      "nonfarm_business"
+    ]
+  },
+  "training_missing_question_rate": 0.15,
+  "validation_missing_question_rates": [
+    0.0,
+    0.1,
+    0.2,
+    0.3
+  ],
+  "validation_metrics": {
+    "0.0": {
+      "accuracy": 0.7900797165633304,
+      "balanced_accuracy": 0.7027874530528243,
+      "macro_f1": 0.7059071799521885,
+      "vulnerable_precision": 0.5614035087719298,
+      "vulnerable_recall": 0.5363128491620112,
+      "vulnerable_f1": 0.5485714285714286,
+      "roc_auc": 0.801974621744536,
+      "average_precision": 0.5515021954070178
+    },
+    "0.1": {
+      "accuracy": 0.7679362267493357,
+      "balanced_accuracy": 0.7068375430247669,
+      "macro_f1": 0.6957252085859973,
+      "vulnerable_precision": 0.5104669887278583,
+      "vulnerable_recall": 0.590316573556797,
+      "vulnerable_f1": 0.5474956822107081,
+      "roc_auc": 0.8051433870351675,
+      "average_precision": 0.5613335280803755
+    },
+    "0.2": {
+      "accuracy": 0.7692648361381754,
+      "balanced_accuracy": 0.7019439999047801,
+      "macro_f1": 0.6937944878124835,
+      "vulnerable_precision": 0.5133333333333333,
+      "vulnerable_recall": 0.5735567970204841,
+      "vulnerable_f1": 0.5417766051011433,
+      "roc_auc": 0.8004413656691305,
+      "average_precision": 0.5595282122752946
+    },
+    "0.3": {
+      "accuracy": 0.7652790079716564,
+      "balanced_accuracy": 0.6954858214389668,
+      "macro_f1": 0.6879579306151354,
+      "vulnerable_precision": 0.5058626465661642,
+      "vulnerable_recall": 0.5623836126629422,
+      "vulnerable_f1": 0.5326278659611993,
+      "roc_auc": 0.7874887602699483,
+      "average_precision": 0.5481920104080698
+    }
+  },
+  "minimum_answered_fraction": 0.6,
+  "standard_result_answered_fraction": 0.8,
+  "test_status": "LOCKED",
+  "warning": "This model provides an initial screening estimate. It must not be used alone to approve or deny assistance, credit, insurance or other services.",
+  "deployment_status": "READY FOR FINAL LOCKED-TEST EVALUATION"
+}

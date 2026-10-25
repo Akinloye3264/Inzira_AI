@@ -1,0 +1,79 @@
+{
+  "system_name": "Inzira Lite",
+  "deployment_role": "Initial screening only",
+  "autonomous_eligibility_decisions_allowed": false,
+  "known_limitations": [
+    {
+      "dimension": "Household size",
+      "finding": "Vulnerable recall was 0.2014 for households with 1–3 members, compared with 0.5225 for households with 4–5 members and 0.6989 for households with 6 or more members.",
+      "severity": "High",
+      "ui_response": "Show an additional limitation notice and offer a complete professional assessment."
+    },
+    {
+      "dimension": "Province",
+      "finding": "Vulnerable recall varied across provinces, with a maximum observed test-set gap of 0.1943.",
+      "severity": "Review required",
+      "ui_response": "Monitor performance in the administrator dashboard. Do not present province as a cause of vulnerability."
+    },
+    {
+      "dimension": "Residence",
+      "finding": "The urban–rural vulnerable-recall gap was 0.0367.",
+      "severity": "Monitor",
+      "ui_response": "Continue subgroup monitoring after deployment."
+    },
+    {
+      "dimension": "Sex of household head",
+      "finding": "The vulnerable-recall gap between male-headed and female-headed households was 0.0743.",
+      "severity": "Monitor",
+      "ui_response": "Continue subgroup monitoring and never use sex as an eligibility rule."
+    }
+  ],
+  "result_rules": {
+    "positive_screen": {
+      "title_en": "Potential economic vulnerability identified",
+      "message_en": "Your answers suggest that a more complete assessment may be helpful. This result does not automatically determine eligibility for assistance."
+    },
+    "negative_screen": {
+      "title_en": "No elevated risk detected from this quick screening",
+      "message_en": "This does not prove that the household is not vulnerable. The quick screen can miss households that need support. You may request a complete assessment."
+    },
+    "insufficient_information": {
+      "title_en": "More information is needed",
+      "message_en": "Fewer than 60% of the questions were answered. Please provide more information or request an assisted assessment."
+    },
+    "limited_information": {
+      "title_en": "Result based on limited information",
+      "message_en": "Between 60% and 79% of the questions were answered. Interpret this screening result with additional caution."
+    },
+    "small_household_notice": {
+      "condition": "household_members <= 3",
+      "title_en": "Complete assessment recommended",
+      "message_en": "This quick screen has lower sensitivity for smaller households. If you have concerns or are seeking support, please request a complete professional assessment even when the screening score is below the threshold."
+    }
+  },
+  "required_ui_actions": [
+    "Always provide a route to professional assessment.",
+    "Never display the label 'not vulnerable'.",
+    "Never use the prediction alone to deny assistance.",
+    "Show data completeness with every result.",
+    "Show the small-household notice when applicable.",
+    "Do not display province as a causal risk factor.",
+    "Provide Kinyarwanda and English result explanations.",
+    "Require native-speaker review of Kinyarwanda translations."
+  ],
+  "administrator_monitoring": {
+    "metrics": [
+      "Vulnerable recall",
+      "False-positive rate",
+      "Macro F1",
+      "Number of assessments"
+    ],
+    "subgroups": [
+      "Province",
+      "Urban or rural residence",
+      "Sex of household head",
+      "Household size"
+    ]
+  },
+  "model_policy": "The model and threshold are frozen. Fairness test results must not be used for post-test model tuning."
+}

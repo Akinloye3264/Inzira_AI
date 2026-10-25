@@ -1,0 +1,14 @@
+{
+  "location": "assets/audio/rw/location.mp3",
+  "household_composition": "assets/audio/rw/household_composition.mp3",
+  "sleeping_rooms": "assets/audio/rw/sleeping_rooms.mp3",
+  "floor_material": "assets/audio/rw/floor_material.mp3",
+  "electricity": "assets/audio/rw/electricity.mp3",
+  "livestock": "assets/audio/rw/livestock.mp3",
+  "mobile_phone": "assets/audio/rw/mobile_phone.mp3",
+  "internet": "assets/audio/rw/internet.mp3",
+  "insurance": "assets/audio/rw/insurance.mp3",
+  "agriculture": "assets/audio/rw/agriculture.mp3",
+  "wage_employment": "assets/audio/rw/wage_employment.mp3",
+  "business": "assets/audio/rw/business.mp3"
+}

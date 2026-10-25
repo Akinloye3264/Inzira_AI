@@ -1,0 +1,56 @@
+{
+  "model_role": "Decision support",
+  "vulnerability_threshold": 0.55,
+  "warning": "Recommendations are non-causal suggestions and require human review.",
+  "feature_labels": {
+    "member_share__s6aq4__code_1.0": "Share of household members carrying out agricultural activity",
+    "member_share__s6aq2__code_1.0": "Share working on the household's farm without payment",
+    "log_livestock_total": "Log-transformed livestock holdings",
+    "hh_s5dq3_1.0": "Dwelling has a beaten-earth floor",
+    "household_members": "Number of household members",
+    "working_age_count": "Number of working-age household members",
+    "crowding_ratio": "Household members per sleeping room",
+    "member_share__s4bq8__code_1.0": "Share of members who own a mobile telephone",
+    "member_share__s4bq8__code_2.0": "Share of members without a mobile telephone",
+    "member_share__s4bq15__code_1.0": "Share who recently used the internet",
+    "member_share__s4bq15__code_2.0": "Share who did not recently use the internet",
+    "member_share__s6bq7__code_4.0": "Share working on their own account",
+    "member_share__s6bq7__code_6.0": "Share working as contributing family workers",
+    "member_share__s6bq7__code_7.0": "Share in unpaid apprenticeship, internship or volunteering",
+    "member_share__s6bq8__code_3.0": "Share of casual workers",
+    "member_share__s6bq8__code_4.0": "Share of seasonal workers",
+    "member_share__s6bq8__code_5.0": "Share of daily workers",
+    "member_share__s3q2__code_1": "Share covered by health insurance",
+    "member_share__s3q2__code_2": "Share without health insurance",
+    "member_share__s4bq7__code_1.0": "Share able to perform a written calculation",
+    "member_share__s4bq7__code_2.0": "Share unable to perform a written calculation",
+    "member_share__s4aq3__code_Missing": "Share without a recorded diploma or certificate",
+    "dependency_ratio": "Children and elderly members per working-age member"
+  },
+  "intervention_catalogue": {
+    "Agricultural resilience": {
+      "action": "Refer for agricultural extension, improved inputs, cooperative market access, livestock services and climate-resilient production support.",
+      "safeguard": "Confirm that agriculture is an active livelihood before referral; do not assume agricultural work itself causes vulnerability."
+    },
+    "Employment and enterprise": {
+      "action": "Assess for vocational training, job matching, apprenticeship, business formalisation, cooperative membership and market-linkage support.",
+      "safeguard": "Match assistance to the member's skills and employment goals. Do not automatically recommend debt."
+    },
+    "Digital and financial inclusion": {
+      "action": "Offer digital-literacy support, safe mobile-money onboarding, device-access options and information about suitable regulated financial services.",
+      "safeguard": "Obtain consent and explain fees, privacy, fraud risks and complaint channels."
+    },
+    "Education and skills": {
+      "action": "Assess for adult numeracy, literacy, TVET certification, digital-skills training and recognition of prior learning.",
+      "safeguard": "Verify education history because missing survey information is not proof that a person lacks education."
+    },
+    "Health-insurance inclusion": {
+      "action": "Refer uninsured members for eligibility assessment and supported enrolment in an appropriate health-insurance programme.",
+      "safeguard": "Verify current coverage before taking action because coverage may have changed since the survey."
+    },
+    "Social protection and basic services": {
+      "action": "Prioritise a caseworker assessment covering social protection, housing quality, overcrowding, water, sanitation and household-care burdens.",
+      "safeguard": "Require human review. The prediction must never be the sole basis for denying or withdrawing assistance."
+    }
+  }
+}

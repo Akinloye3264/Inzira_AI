@@ -1,0 +1,162 @@
+{
+  "mode_name": "Quick Household Check",
+  "default_language": "rw",
+  "supported_languages": [
+    "rw",
+    "en"
+  ],
+  "purpose": "Initial economic-vulnerability screening",
+  "number_of_questions": 12,
+  "model_features": [
+    "province",
+    "ur",
+    "household_members",
+    "children_count",
+    "working_age_count",
+    "elderly_count",
+    "sleeping_rooms",
+    "crowding_ratio",
+    "dependency_ratio",
+    "floor_material",
+    "electricity_access",
+    "livestock_ownership",
+    "log_livestock_count",
+    "mobile_phone",
+    "recent_internet_use",
+    "insured_share",
+    "agricultural_activity",
+    "wage_employment",
+    "nonfarm_business"
+  ],
+  "derived_features": [
+    "working_age_count",
+    "crowding_ratio",
+    "dependency_ratio",
+    "log_livestock_count"
+  ],
+  "questions": [
+    {
+      "id": "location",
+      "label": "Where does the household live?",
+      "fields_created": [
+        "province",
+        "ur"
+      ],
+      "widget": "province_and_residence_select",
+      "allow_unknown": true
+    },
+    {
+      "id": "household_composition",
+      "label": "How many people, children and elderly people live in the household?",
+      "fields_created": [
+        "household_members",
+        "children_count",
+        "working_age_count",
+        "elderly_count",
+        "dependency_ratio"
+      ],
+      "widget": "household_composition_inputs",
+      "allow_unknown": true
+    },
+    {
+      "id": "sleeping_rooms",
+      "label": "How many rooms are mainly used for sleeping?",
+      "fields_created": [
+        "sleeping_rooms",
+        "crowding_ratio"
+      ],
+      "widget": "number_input",
+      "allow_unknown": true
+    },
+    {
+      "id": "floor_material",
+      "label": "What is the main floor material?",
+      "fields_created": [
+        "floor_material"
+      ],
+      "widget": "select_with_unknown",
+      "allow_unknown": true
+    },
+    {
+      "id": "electricity",
+      "label": "Does the household have electricity access?",
+      "fields_created": [
+        "electricity_access"
+      ],
+      "widget": "yes_no_unknown",
+      "allow_unknown": true
+    },
+    {
+      "id": "livestock",
+      "label": "Approximately how many livestock does the household own?",
+      "fields_created": [
+        "livestock_ownership",
+        "livestock_count",
+        "log_livestock_count"
+      ],
+      "widget": "livestock_range",
+      "allow_unknown": true,
+      "transformation": "The selected livestock range is converted automatically into the model's livestock feature."
+    },
+    {
+      "id": "mobile_phone",
+      "label": "Does anyone in the household have a mobile telephone?",
+      "fields_created": [
+        "mobile_phone"
+      ],
+      "widget": "yes_no_unknown",
+      "allow_unknown": true
+    },
+    {
+      "id": "internet",
+      "label": "Has anyone used the internet during the last three months?",
+      "fields_created": [
+        "recent_internet_use"
+      ],
+      "widget": "yes_no_unknown",
+      "allow_unknown": true
+    },
+    {
+      "id": "insurance",
+      "label": "How many household members currently have health insurance?",
+      "fields_created": [
+        "insured_share"
+      ],
+      "widget": "insured_member_count",
+      "allow_unknown": true
+    },
+    {
+      "id": "agriculture",
+      "label": "Does anyone carry out agricultural activity?",
+      "fields_created": [
+        "agricultural_activity"
+      ],
+      "widget": "yes_no_unknown",
+      "allow_unknown": true
+    },
+    {
+      "id": "wage_employment",
+      "label": "Does anyone currently have wage employment?",
+      "fields_created": [
+        "wage_employment"
+      ],
+      "widget": "yes_no_unknown",
+      "allow_unknown": true
+    },
+    {
+      "id": "business",
+      "label": "Does anyone operate a non-farm business?",
+      "fields_created": [
+        "nonfarm_business"
+      ],
+      "widget": "yes_no_unknown",
+      "allow_unknown": true
+    }
+  ],
+  "data_completeness_rules": {
+    "standard_result_minimum": 0.8,
+    "limited_information_minimum": 0.6,
+    "below_minimum_action": "Request more information instead of producing a vulnerability result."
+  },
+  "result_message": "This is a screening estimate and must not be used alone to approve or deny benefits, credit, insurance or public assistance."
+}

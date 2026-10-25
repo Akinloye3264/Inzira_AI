@@ -1,0 +1,12 @@
+{
+  "release_name": "inzira_lite_v1_20261024_235457",
+  "created_utc": "2026-10-24T23:54:57.612712+00:00",
+  "model_status": "FINAL",
+  "deployment_role": "INITIAL_SCREENING_ONLY",
+  "default_language": "rw",
+  "translation_status": "DRAFT_REQUIRES_NATIVE_REVIEW",
+  "raw_microdata_included": false,
+  "internal_test_predictions_included": false,
+  "professional_model_included": false,
+  "important_notice": "This release contains the Lite screening model only. The detailed professional model will be packaged separately."
+}

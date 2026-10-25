@@ -1,16 +1,19 @@
-
-# NISR dataset - do not upload raw survey files
-Microdata.zip
-*.dta
-Cross_Section/
-
-# Jupyter temporary files
-.ipynb_checkpoints/
+.venv*/
 __pycache__/
-
-# TensorBoard training logs
-logs/
-
-# Environment and system files
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+.streamlit/secrets.toml
 .env
 .DS_Store
+Thumbs.db
+
+# Raw or identifying survey data must never be committed.
+*.dta
+Microdata.zip
+Cross_Section/
+*internal_test_predictions*.csv
+
+# Local experiment outputs.
+runs/
+logs/
