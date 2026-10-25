@@ -1131,6 +1131,7 @@ def render_opportunity_matcher(language: str) -> None:
 
     st.subheader(copy["results_title"])
     st.write(copy["results_intro"])
+    st.info(copy["application_note"])
     st.caption(copy["context_used"] if has_household_context else copy["context_not_used"])
 
     def open_case_tracker(opportunity_id: str) -> None:
@@ -1217,6 +1218,7 @@ def render_staff_create(
     opportunities_by_id: dict[str, Any],
 ) -> None:
     records: list[CaseRecord] = st.session_state.case_records
+    st.write(copy["create_intro"])
     selected_id = st.session_state.case_opportunity_id
     if selected_id not in opportunities_by_id:
         selected_id = opportunities[0].id
@@ -1265,6 +1267,7 @@ def render_staff_update(copy: dict[str, Any]) -> None:
         st.info(copy["empty"])
         return
 
+    st.caption(copy["decision_note"])
     record_ids = [record.case_id for record in records]
 
     def sync_case_form() -> None:
@@ -1428,6 +1431,7 @@ def render_impact_dashboard(language: str) -> None:
     opportunities_by_id = {item.id: item for item in opportunities}
 
     render_page_intro(copy["kicker"], copy["title"], copy["body"])
+    st.warning(copy["role_notice"])
     demo_label = (
         "Competition demo · production authentication required"
         if language == "en"
