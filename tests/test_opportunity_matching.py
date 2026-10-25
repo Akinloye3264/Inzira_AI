@@ -27,6 +27,8 @@ def test_catalogue_loads_verified_pathways():
     opportunities = load_catalogue(CATALOGUE)
     assert len(opportunities) >= 7
     assert all(item.source_url.startswith("https://") for item in opportunities)
+    assert all(item.apply_url.startswith("https://") for item in opportunities)
+    assert all("jobportal.kora.rw" not in item.apply_url for item in opportunities)
 
 
 def test_recent_graduate_internship_profile_ranks_internship_first():
