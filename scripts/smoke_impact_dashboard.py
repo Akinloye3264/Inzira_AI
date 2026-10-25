@@ -16,10 +16,10 @@ def errors(app: AppTest) -> list[str]:
 
 
 def main() -> None:
-    app = AppTest.from_file(PROJECT_ROOT / "app.py").run(timeout=30)
-    app.button_group(key="main_page").set_value("impact").run(timeout=30)
+    app = AppTest.from_file(PROJECT_ROOT / "scripts" / "admin_test_app.py").run(timeout=30)
     assert not app.exception, errors(app)
 
+    app.button_group(key="staff_section").set_value("new").run(timeout=30)
     app.selectbox(key="case_create_opportunity").set_value("rab_twigire_muhinzi")
     next(button for button in app.button if button.label == "Kora referral itarangwamo amazina").click().run(timeout=30)
     assert not app.exception, errors(app)

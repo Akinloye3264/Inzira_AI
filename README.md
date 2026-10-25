@@ -17,9 +17,10 @@ The application is **decision support only**. It must never approve, deny, or wi
 - Standalone opportunity matcher for jobs, internships, vocational training, agriculture and enterprise support
 - Transparent fit score with the reasons, eligibility checks, current-status warning and official application route
 - Downloadable opportunity plan and shortlist; the vulnerability score is never used to rank opportunities
-- Anonymous referral creation and structured caseworker follow-up
-- Impact dashboard for referrals, applications, progress outcomes and overdue follow-ups
-- Session-only case storage with schema-validated CSV export and restore for the competition demo
+- Google-authenticated admin workspace with an explicit email allowlist
+- Anonymous referral creation, structured follow-up and an admin audit trail
+- MongoDB-backed referral dashboard for applications, outcomes and overdue follow-ups
+- Reviewed opportunity directory plus schema-validated CSV export and restore
 
 ## Model evidence
 
@@ -70,27 +71,46 @@ python scripts/smoke_impact_dashboard.py
 
 The smoke test loads both joblib artifacts, creates all 19 raw model inputs, transforms them into 49 processed predictors, and performs a real probability prediction.
 
+## Admin authentication and MongoDB
+
+The public screening remains anonymous and session-only. The protected Admin page uses Streamlit's native Google OIDC login, an administrator email allowlist and MongoDB Atlas for persistent anonymous referral records.
+
+1. Create a Google Cloud OAuth 2.0 web client.
+2. Add `https://YOUR-APP.streamlit.app/oauth2callback` as an authorized redirect URI.
+3. Create a MongoDB Atlas database user with read/write access only to the `inzira_ai` database.
+4. Copy `.streamlit/secrets.example.toml`, replace every placeholder, and paste it into **Streamlit Community Cloud → App settings → Secrets**.
+5. Put only approved Google account addresses in `admin.allowed_emails`.
+
+Generate the cookie secret locally with:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+Never commit `.streamlit/secrets.toml`, the Google client secret or the MongoDB URI. The repository already ignores the local secrets file.
+
 ## Deploy on Streamlit Community Cloud
 
 1. Push this repository to GitHub. Do not add the EICV7 raw data or internal test predictions.
 2. Open [share.streamlit.io](https://share.streamlit.io/).
 3. Select the repository and set the main file to `app.py`.
 4. Select Python 3.12 if the deployment settings offer a version choice.
-5. Deploy, then complete one English and one Kinyarwanda assessment on a phone-sized screen.
-
-No API, database, or secret is required for this competition release.
+5. Add the Google OIDC, admin allowlist and MongoDB values in the app's Secrets settings.
+6. Deploy, then complete one English and one Kinyarwanda assessment and one authenticated referral journey.
 
 ## Repository structure
 
 ```text
 app.py                         Streamlit interface
 src/inzira/                    Features, inference, referrals and opportunity ranking
+src/inzira/case_store.py       MongoDB referral persistence and admin audit trail
 data/opportunities.json        Reviewed official pathway catalogue (not a live vacancy feed)
 tests/                         Unit tests
 scripts/smoke_inference.py     End-to-end artifact check
 scripts/smoke_impact_dashboard.py  Caseworker workflow check
 artifacts/inzira_lite_v1_*/    Verified deployment bundle and model evidence
 .streamlit/config.toml         Theme and privacy-oriented settings
+.streamlit/secrets.example.toml  Safe configuration template; contains no real secrets
 requirements.txt               Deployment dependencies
 ```
 
@@ -102,7 +122,8 @@ requirements.txt               Deployment dependencies
 - Suggested interventions are non-causal referral ideas, not automated prescriptions.
 - Opportunity fit scores are relevance scores, not acceptance probabilities. Providers decide eligibility and availability.
 - Case records intentionally exclude names, telephone numbers, national IDs and free-text personal notes.
-- Browser-session storage is suitable for this demonstration, not production case management. Production use requires approved identity, access, encryption and retention controls.
+- Screening answers remain in the visitor's Streamlit session and are not written to MongoDB. Only an authenticated, allowlisted admin can create a persistent anonymous referral.
+- MongoDB records still require an approved retention policy, database backups and institutional governance before real field deployment.
 - The Kinyarwanda copy is a draft and requires native-speaker review before public field use.
 
 The EICV7 2023–2024 data is provided by the National Institute of Statistics of Rwanda. The raw survey data is intentionally excluded from this repository.
