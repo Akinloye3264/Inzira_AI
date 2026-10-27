@@ -19,24 +19,25 @@ def main() -> None:
     app = AppTest.from_file(PROJECT_ROOT / "scripts" / "admin_test_app.py").run(timeout=30)
     assert not app.exception, errors(app)
 
-    app.button_group(key="staff_section").set_value("new").run(timeout=30)
+    app.button_group(key="staff_section").set_value("create").run(timeout=30)
     app.selectbox(key="case_create_opportunity").set_value("rab_twigire_muhinzi")
-    next(button for button in app.button if button.label == "Kora referral itarangwamo amazina").click().run(timeout=30)
+    app.checkbox(key="case_create_consent").check()
+    next(button for button in app.button if button.label == "Create anonymous referral").click().run(timeout=30)
     assert not app.exception, errors(app)
-    assert app.session_state["case_records"], "No anonymous case was created."
+    assert app.session_state["admin_records"], "No anonymous case was created."
 
-    app.button_group(key="staff_section").set_value("update").run(timeout=30)
+    app.button_group(key="staff_section").set_value("referrals").run(timeout=30)
     app.selectbox(key="case_update_status").set_value("application_started")
     app.selectbox(key="case_update_outcome").set_value("interview")
     app.selectbox(key="case_update_barrier").set_value("documents")
-    next(button for button in app.button if button.label == "Bika amakuru yo gukurikirana").click().run(timeout=30)
+    next(button for button in app.button if button.label == "Save follow-up update").click().run(timeout=30)
     assert not app.exception, errors(app)
 
-    record = app.session_state["case_records"][0]
+    record = app.session_state["admin_records"][0]
     assert record.status == "application_started"
     assert record.outcome == "interview"
 
-    app.button_group(key="staff_section").set_value("dashboard").run(timeout=30)
+    app.button_group(key="staff_section").set_value("overview").run(timeout=30)
     rendered_text = "\n".join(item.value for item in app.markdown)
     assert "metric-grid" in rendered_text
 

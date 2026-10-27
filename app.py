@@ -1,31 +1,19 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
 from html import escape
 from pathlib import Path
 from typing import Any
 
-import pandas as pd
 import streamlit as st
 
 from src.inzira.action_plans import ActionPlan, build_action_plans
-from src.inzira.case_store import CaseStoreError, MongoCaseStore
-from src.inzira.copy import EXTRA_COPY, IMPACT_COPY, OPPORTUNITY_COPY
+from src.inzira.copy import EXTRA_COPY, OPPORTUNITY_COPY
 from src.inzira.features import (
     QUESTION_GROUPS,
     build_assessment_features,
     validate_household_counts,
 )
 from src.inzira.inference import ScreeningResult, run_screening
-from src.inzira.impact_tracking import (
-    CaseRecord,
-    count_by,
-    create_case_record,
-    impact_summary,
-    records_from_csv,
-    records_to_csv,
-    update_case_record,
-)
 from src.inzira.opportunity_matching import (
     MatchProfile,
     OpportunityMatch,
@@ -54,82 +42,6 @@ def get_bundle() -> RuntimeBundle:
 @st.cache_data(show_spinner=False)
 def get_opportunities():
     return load_catalogue(PROJECT_ROOT / "data" / "opportunities.json")
-
-
-@st.cache_resource(show_spinner=False)
-def get_case_store(uri: str, database: str) -> MongoCaseStore:
-    return MongoCaseStore(uri, database)
-
-
-def _secret_section(name: str) -> dict[str, Any]:
-    try:
-        return dict(st.secrets[name]) if name in st.secrets else {}
-    except (FileNotFoundError, KeyError):
-        return {}
-
-
-def require_admin_access(language: str) -> tuple[str, MongoCaseStore | None] | None:
-    """Authenticate and authorize one of the explicitly allowlisted admins."""
-    auth_config = _secret_section("auth")
-    admin_config = _secret_section("admin")
-    database_config = _secret_section("mongodb")
-    if not auth_config:
-        st.subheader("Admin sign-in" if language == "en" else "Kwinjira kwa admin")
-        st.info(
-            "Admin authentication is not configured yet. Add the Google OIDC and MongoDB values from `.streamlit/secrets.example.toml` to the app's Streamlit secrets."
-            if language == "en"
-            else "Kwinjira kwa admin ntikurashyirwaho. Shyira Google OIDC na MongoDB biri muri `.streamlit/secrets.example.toml` muri Streamlit secrets z'iyi porogaramu."
-        )
-        return None
-
-    if not st.user.is_logged_in:
-        st.markdown("### Admin sign-in" if language == "en" else "### Kwinjira kwa admin")
-        st.write(
-            "Use an approved Google account to open the protected referral workspace."
-            if language == "en"
-            else "Koresha konti ya Google yemewe kugira ngo winjire ahakurikiranwa referral."
-        )
-        st.button(
-            "Continue with Google" if language == "en" else "Komeza ukoresheje Google",
-            type="primary",
-            width="stretch",
-            on_click=st.login,
-        )
-        return None
-
-    email = str(st.user.get("email", "")).lower().strip()
-    allowed_emails = {
-        str(item).lower().strip() for item in admin_config.get("allowed_emails", [])
-    }
-    if st.user.get("email_verified") is False or not email or email not in allowed_emails:
-        st.error(
-            "This Google account is signed in but is not authorized as an Inzira administrator."
-            if language == "en"
-            else "Iyi konti ya Google yinjiye ariko ntiyemerewe kuba admin wa Inzira."
-        )
-        st.button("Sign out" if language == "en" else "Sohoka", on_click=st.logout)
-        return None
-
-    uri = str(database_config.get("uri", "")).strip()
-    database = str(database_config.get("database", "inzira_ai")).strip()
-    if not uri:
-        st.error(
-            "MongoDB is not configured. Add the `[mongodb]` section to Streamlit secrets."
-            if language == "en"
-            else "MongoDB ntirashyirwaho. Ongeramo igice cya `[mongodb]` muri Streamlit secrets."
-        )
-        st.button("Sign out" if language == "en" else "Sohoka", on_click=st.logout)
-        return None
-
-    try:
-        return email, get_case_store(uri, database)
-    except CaseStoreError:
-        st.error(
-            "The admin database is temporarily unavailable. Check the MongoDB URI and Atlas network access."
-            if language == "en"
-            else "Ububiko bwa admin ntiburi kuboneka. Reba MongoDB URI n'uburenganzira bwa Atlas network."
-        )
-        return None
 
 
 def render_metric_grid(items: list[tuple[str, str | int]]) -> None:
@@ -308,9 +220,6 @@ def initialize_state() -> None:
             "access_mode": "either",
             "readiness": "within_30_days",
         },
-        "case_records": [],
-        "case_opportunity_id": None,
-        "staff_section": "dashboard",
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -445,11 +354,9 @@ def render_sidebar(bundle: RuntimeBundle) -> str:
 
 def render_header_navigation(copy: dict[str, str]) -> str:
     opportunity_copy = OPPORTUNITY_COPY[st.session_state.language]
-    impact_copy = IMPACT_COPY[st.session_state.language]
     labels = {
         "check": copy["nav_check"],
         "opportunities": opportunity_copy["nav"],
-        "impact": impact_copy["nav"],
         "about": copy["nav_about"],
     }
     if "main_page" not in st.session_state:
@@ -1216,12 +1123,6 @@ def render_opportunity_matcher(language: str) -> None:
     st.info(copy["application_note"])
     st.caption(copy["context_used"] if has_household_context else copy["context_not_used"])
 
-    def open_case_tracker(opportunity_id: str) -> None:
-        st.session_state.case_opportunity_id = opportunity_id
-        st.session_state.case_create_opportunity = opportunity_id
-        st.session_state.staff_section = "new"
-        st.session_state.main_page = "impact"
-
     for rank, match in enumerate(visible_matches, start=1):
         opportunity = match.opportunity
         with st.container(border=True):
@@ -1257,17 +1158,7 @@ def render_opportunity_matcher(language: str) -> None:
                 st.link_button(copy["official"], opportunity.apply_url, width="stretch")
             with link_two:
                 st.link_button(copy["source"], opportunity.source_url, width="stretch")
-            shortlist, tracker = st.columns(2)
-            with shortlist:
-                st.checkbox(copy["shortlist"], key=f"opp_shortlist_{opportunity.id}")
-            with tracker:
-                st.button(
-                    IMPACT_COPY[language]["track"],
-                    key=f"track_{opportunity.id}",
-                    width="stretch",
-                    on_click=open_case_tracker,
-                    args=(opportunity.id,),
-                )
+            st.checkbox(copy["shortlist"], key=f"opp_shortlist_{opportunity.id}")
 
     shortlisted = [
         match
@@ -1282,434 +1173,6 @@ def render_opportunity_matcher(language: str) -> None:
         mime="text/plain",
         width="stretch",
     )
-
-
-def _case_screening_route(language: str) -> str:
-    result = st.session_state.assessment_result
-    if not result:
-        return "not_completed"
-    if result["elevated_risk"]:
-        return "complete_assessment_recommended"
-    return "screened_lower_risk_complete_assessment_still_available"
-
-
-def render_staff_create(
-    language: str,
-    copy: dict[str, Any],
-    opportunities: list[Any],
-    opportunities_by_id: dict[str, Any],
-    store: MongoCaseStore | None,
-    actor: str,
-) -> None:
-    records: list[CaseRecord] = st.session_state.case_records
-    st.write(copy["create_intro"])
-    selected_id = st.session_state.case_opportunity_id
-    if selected_id not in opportunities_by_id:
-        selected_id = opportunities[0].id
-    if st.session_state.get("case_create_opportunity") not in opportunities_by_id:
-        st.session_state.case_create_opportunity = selected_id
-    with st.form("create_case_form"):
-        opportunity_id = st.selectbox(
-            copy["opportunity"],
-            [item.id for item in opportunities],
-            format_func=lambda value: opportunities_by_id[value].title(language),
-            key="case_create_opportunity",
-        )
-        next_followup = st.date_input(
-            copy["followup"],
-            value=date.today() + timedelta(days=7),
-            key="case_create_followup",
-        )
-        create_submitted = st.form_submit_button(
-            copy["create"], type="primary", width="stretch"
-        )
-    screening_route = _case_screening_route(language)
-    st.caption(
-        copy["screening_context"]
-        if screening_route != "not_completed"
-        else copy["no_screening"]
-    )
-    if create_submitted:
-        opportunity = opportunities_by_id[opportunity_id]
-        answers = get_answers()
-        record = create_case_record(
-            opportunity_id=opportunity.id,
-            opportunity_title=opportunity.title(language),
-            provider=opportunity.provider,
-            province=str(answers.get("province") or "unknown"),
-            household_size=answers.get("household_members"),
-            screening_route=screening_route,
-            next_followup=next_followup.isoformat(),
-        )
-        try:
-            if store is not None:
-                store.create_record(record, actor=actor)
-            st.session_state.case_records = [record, *records]
-            st.success(f"{copy['created']}: {record.case_id}")
-        except CaseStoreError as exc:
-            st.error(str(exc))
-
-
-def render_staff_update(
-    copy: dict[str, Any], store: MongoCaseStore | None, actor: str
-) -> None:
-    records: list[CaseRecord] = st.session_state.case_records
-    if not records:
-        st.info(copy["empty"])
-        return
-
-    st.caption(copy["decision_note"])
-    record_ids = [record.case_id for record in records]
-
-    def sync_case_form() -> None:
-        case_id = st.session_state.case_update_id
-        record = next(item for item in records if item.case_id == case_id)
-        st.session_state.case_update_status = record.status
-        st.session_state.case_update_outcome = record.outcome
-        st.session_state.case_update_barrier = record.barrier
-        st.session_state.case_update_followup = (
-            datetime.strptime(record.next_followup, "%Y-%m-%d").date()
-            if record.next_followup
-            else date.today() + timedelta(days=7)
-        )
-
-    selected_case_id = st.selectbox(
-        copy["select_case"],
-        record_ids,
-        key="case_update_id",
-        on_change=sync_case_form,
-    )
-    selected_case = next(record for record in records if record.case_id == selected_case_id)
-    st.caption(f"{selected_case.opportunity_title} · {selected_case.provider}")
-    with st.form("update_case_form"):
-        status_options = list(copy["statuses"])
-        status = st.selectbox(
-            copy["status"],
-            status_options,
-            index=status_options.index(selected_case.status),
-            format_func=lambda value: copy["statuses"][value],
-            key="case_update_status",
-        )
-        outcome_options = list(copy["outcomes"])
-        outcome = st.selectbox(
-            copy["outcome"],
-            outcome_options,
-            index=outcome_options.index(selected_case.outcome),
-            format_func=lambda value: copy["outcomes"][value],
-            key="case_update_outcome",
-        )
-        barrier_options = list(copy["barriers"])
-        barrier = st.selectbox(
-            copy["barrier"],
-            barrier_options,
-            index=barrier_options.index(selected_case.barrier),
-            format_func=lambda value: copy["barriers"][value],
-            key="case_update_barrier",
-        )
-        current_followup = (
-            datetime.strptime(selected_case.next_followup, "%Y-%m-%d").date()
-            if selected_case.next_followup
-            else date.today() + timedelta(days=7)
-        )
-        next_followup = st.date_input(
-            copy["followup"], value=current_followup, key="case_update_followup"
-        )
-        update_submitted = st.form_submit_button(
-            copy["save"], type="primary", width="stretch"
-        )
-    if update_submitted:
-        updated = update_case_record(
-            selected_case,
-            status=status,
-            outcome=outcome,
-            barrier=barrier,
-            next_followup=next_followup.isoformat(),
-        )
-        try:
-            if store is not None:
-                store.update_record(updated, actor=actor)
-            st.session_state.case_records = [
-                updated if item.case_id == selected_case_id else item for item in records
-            ]
-            st.success(copy["saved"])
-        except CaseStoreError as exc:
-            st.error(str(exc))
-
-
-def render_staff_dashboard(language: str, copy: dict[str, Any]) -> None:
-    records: list[CaseRecord] = st.session_state.case_records
-    summary = impact_summary(records)
-    render_metric_grid(
-        [
-            (copy["total"], summary["total"]),
-            (copy["contacted"], summary["contacted"]),
-            (copy["applications"], summary["applications"]),
-            (copy["positive"], summary["positive_outcomes"]),
-            (copy["due"], summary["followups_due"]),
-        ]
-    )
-    st.caption(copy["impact_note"])
-
-    if not records:
-        st.info(copy["empty"])
-        return
-
-    status_column, pathway_column = st.columns(2)
-    with status_column:
-        st.subheader(copy["status_chart"])
-        status_counts = count_by(records, "status")
-        status_frame = pd.DataFrame(
-            {
-                copy["status"]: [copy["statuses"][key] for key in status_counts],
-                copy["total"]: list(status_counts.values()),
-            }
-        ).set_index(copy["status"])
-        st.bar_chart(status_frame)
-    with pathway_column:
-        st.subheader(copy["pathway_chart"])
-        pathway_counts = count_by(records, "opportunity_title")
-        st.bar_chart(
-            pd.DataFrame(
-                {copy["total"]: list(pathway_counts.values())},
-                index=list(pathway_counts),
-            )
-        )
-
-    due_records = [
-        record
-        for record in records
-        if record.next_followup
-        and record.next_followup <= date.today().isoformat()
-        and record.status not in {"closed", "accepted"}
-    ]
-    if due_records:
-        st.subheader(copy["due_title"])
-        st.dataframe(
-            [
-                {
-                    copy["case_id"]: record.case_id,
-                    copy["opportunity"]: record.opportunity_title,
-                    copy["followup"]: record.next_followup,
-                    copy["status"]: copy["statuses"][record.status],
-                }
-                for record in due_records
-            ],
-            width="stretch",
-            hide_index=True,
-        )
-
-    st.subheader("All referrals" if language == "en" else "Referral zose")
-    search = st.text_input(
-        "Search by case ID, pathway or provider"
-        if language == "en"
-        else "Shakisha nomero ya dosiye, inzira cyangwa urwego",
-        key="admin_case_search",
-        placeholder="IA-2026...",
-    ).lower().strip()
-    filtered_records = [
-        record
-        for record in records
-        if not search
-        or search
-        in " ".join(
-            (record.case_id, record.opportunity_title, record.provider)
-        ).lower()
-    ]
-    st.dataframe(
-        [
-            {
-                copy["case_id"]: record.case_id,
-                copy["opportunity"]: record.opportunity_title,
-                copy["status"]: copy["statuses"][record.status],
-                copy["outcome"]: copy["outcomes"][record.outcome],
-                copy["followup"]: record.next_followup,
-            }
-            for record in filtered_records
-        ],
-        width="stretch",
-        hide_index=True,
-    )
-
-
-def render_staff_data(
-    copy: dict[str, Any], store: MongoCaseStore | None, actor: str
-) -> None:
-    records: list[CaseRecord] = st.session_state.case_records
-    st.write(copy["data_note"])
-    st.download_button(
-        copy["download"],
-        data=records_to_csv(records).encode("utf-8"),
-        file_name="inzira_anonymous_case_records.csv",
-        mime="text/csv",
-        width="stretch",
-    )
-    with st.form("import_case_form"):
-        upload = st.file_uploader(copy["upload"], type=["csv"], key="case_import_upload")
-        import_submitted = st.form_submit_button(copy["import"])
-    if import_submitted and upload is not None:
-        try:
-            imported = records_from_csv(upload.getvalue().decode("utf-8-sig"))
-            if store is not None:
-                store.import_records(imported, actor=actor)
-                st.session_state.case_records = store.list_records()
-            else:
-                st.session_state.case_records = imported
-            st.success(f"{copy['imported']}: {len(imported)}")
-        except (UnicodeDecodeError, ValueError, CaseStoreError) as exc:
-            st.error(f"{copy['import_error']}: {exc}")
-
-
-def render_admin_opportunities(language: str, opportunities: list[Any]) -> None:
-    st.subheader(
-        "Reviewed opportunity directory"
-        if language == "en"
-        else "Urutonde rw'amahirwe yagenzuwe"
-    )
-    st.caption(
-        "These are reviewed pathways, not a live vacancy feed. Applicants submit through the official provider; administrators do not approve applications."
-        if language == "en"
-        else "Izi ni inzira zagenzuwe, si urutonde ruhita ruvugururwa rw'imyanya. Usaba anyura ku rwego rwemewe; admin ntabwo yemeza ubusabe."
-    )
-    frame = pd.DataFrame(
-        [
-            {
-                "ID": item.id,
-                "Provider": item.provider,
-                "Opportunity": item.title(language),
-                "Official route": item.apply_url,
-                "Source": item.source_url,
-            }
-            for item in opportunities
-        ]
-    )
-    st.dataframe(
-        frame,
-        width="stretch",
-        hide_index=True,
-        column_config={
-            "Official route": st.column_config.LinkColumn("Official route"),
-            "Source": st.column_config.LinkColumn("Source"),
-        },
-    )
-    st.info(
-        "For safety, catalogue changes are code-reviewed before deployment. Live editing is intentionally disabled in this release."
-        if language == "en"
-        else "Ku bw'umutekano, impinduka kuri uru rutonde zibanza kugenzurwa muri code mbere yo gushyirwa ku rubuga."
-    )
-
-
-def render_admin_settings(
-    language: str, actor: str, store: MongoCaseStore | None
-) -> None:
-    st.subheader("Admin settings" if language == "en" else "Igenamiterere rya admin")
-    database_status = (
-        "Connected"
-        if store is not None and store.health()
-        else "Automated test session"
-    )
-    render_metric_grid(
-        [
-            ("Signed-in admin" if language == "en" else "Admin winjiye", actor),
-            ("Database", database_status),
-            (
-                "Data scope" if language == "en" else "Ubwoko bw'amakuru",
-                "Anonymous referrals",
-            ),
-        ]
-    )
-    if store is not None:
-        st.subheader(
-            "Recent admin activity"
-            if language == "en"
-            else "Ibikorwa bya admin biheruka"
-        )
-        try:
-            activity = store.recent_audit()
-            if activity:
-                st.dataframe(activity, width="stretch", hide_index=True)
-            else:
-                st.caption(
-                    "No admin activity recorded yet."
-                    if language == "en"
-                    else "Nta bikorwa bya admin birandikwa kugeza ubu."
-                )
-        except CaseStoreError as exc:
-            st.error(str(exc))
-        st.button(
-            "Sign out" if language == "en" else "Sohoka",
-            width="stretch",
-            on_click=st.logout,
-        )
-    else:
-        st.caption("Authentication and MongoDB are bypassed only by the automated UI test.")
-
-
-def render_impact_dashboard(language: str) -> None:
-    copy = IMPACT_COPY[language]
-    access = require_admin_access(language)
-    if access is None:
-        return
-    actor, store = access
-    opportunities = get_opportunities()
-    opportunities_by_id = {item.id: item for item in opportunities}
-
-    if store is not None:
-        try:
-            st.session_state.case_records = store.list_records()
-        except CaseStoreError as exc:
-            st.error(str(exc))
-            return
-
-    render_page_intro(copy["kicker"], copy["title"], copy["body"])
-    st.warning(copy["role_notice"])
-    demo_label = (
-        f"Protected admin · {actor}"
-        if language == "en"
-        else f"Admin urinzwe · {actor}"
-    )
-    st.markdown(f"<span class='staff-badge'>{escape(demo_label)}</span>", unsafe_allow_html=True)
-    st.caption(copy["flow"])
-    with st.expander(
-        "Privacy and production requirements"
-        if language == "en"
-        else "Ibanga n'ibisabwa mu ikoreshwa nyaryo"
-    ):
-        st.write(copy["privacy"])
-        st.write(copy["storage"])
-
-    section_labels = {
-        "new": copy["tab_new"],
-        "update": copy["tab_update"],
-        "dashboard": copy["tab_dashboard"],
-        "opportunities": copy["tab_opportunities"],
-        "data": copy["tab_data"],
-        "settings": copy["tab_settings"],
-    }
-    if st.session_state.staff_section not in section_labels:
-        st.session_state.staff_section = "dashboard"
-    section = st.segmented_control(
-        "Staff workspace",
-        list(section_labels),
-        format_func=lambda value: section_labels[value],
-        selection_mode="single",
-        label_visibility="collapsed",
-        key="staff_section",
-    )
-
-    if section == "new":
-        render_staff_create(
-            language, copy, opportunities, opportunities_by_id, store, actor
-        )
-    elif section == "update":
-        render_staff_update(copy, store, actor)
-    elif section == "dashboard":
-        render_staff_dashboard(language, copy)
-    elif section == "opportunities":
-        render_admin_opportunities(language, opportunities)
-    elif section == "data":
-        render_staff_data(copy, store, actor)
-    else:
-        render_admin_settings(language, actor, store)
 
 
 def main() -> None:
@@ -1732,8 +1195,6 @@ def main() -> None:
         render_check(bundle, language, base, copy)
     elif page == "opportunities":
         render_opportunity_matcher(language)
-    elif page == "impact":
-        render_impact_dashboard(language)
     else:
         render_about(bundle, language, base, copy)
 

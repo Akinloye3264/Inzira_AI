@@ -33,11 +33,11 @@ def main() -> None:
     )
     assert "Twigire Muhinzi" in rendered_text
     assert app.download_button, "The opportunity plan download did not render."
-    track_buttons = [button for button in app.button if button.key.startswith("track_")]
-    assert len(track_buttons) == 3, "The first result view must show exactly three matches."
+    shortlist_controls = [checkbox for checkbox in app.checkbox if checkbox.key.startswith("opp_shortlist_")]
+    assert len(shortlist_controls) == 3, "The first result view must show exactly three matches."
     print(
         "Opportunity matcher UI passed:",
-        {"matches_rendered": len(track_buttons), "downloads": len(app.download_button)},
+        {"matches_rendered": len(shortlist_controls), "downloads": len(app.download_button)},
     )
 
 
