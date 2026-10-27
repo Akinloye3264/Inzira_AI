@@ -314,10 +314,9 @@ def render_admin_dashboard(
     project_root: Path,
 ) -> None:
     inject_admin_styles()
-    language = st.segmented_control(
-        "Language", ["en", "rw"], format_func=lambda value: "English" if value == "en" else "Ikinyarwanda",
-        selection_mode="single", default="en", key="admin_language",
-    ) or "en"
+    # The protected operations workspace is intentionally English-only. The
+    # public screening and opportunity experiences remain bilingual.
+    language = "en"
     copy = IMPACT_COPY[language]
     opportunities = load_catalogue(project_root / "data" / "opportunities.json")
     try:
