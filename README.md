@@ -8,6 +8,10 @@ Inzira AI is a privacy-conscious household economic-vulnerability screening and 
 
 The application is **decision support only**. It does not issue an official poverty classification and must never approve, deny or withdraw benefits, credit, insurance, employment or public assistance without human review.
 
+## Product preview
+
+![Inzira AI bilingual public screening application](docs/screenshots/inzira-ai-home.png)
+
 ## Team
 
 **Registered team:** Inzira Tech
@@ -235,5 +239,3 @@ Inzira Tech declares that Inzira AI is the team's original submission for the NI
 - [Live public application](https://inzira-ai-rwanda.streamlit.app/)
 - [Public GitHub repository](https://github.com/Akinloye3264/Inzira_AI)
 - [NISR 2026 Big Data Hackathon](https://www.statistics.gov.rw/about/hackathon/2026-hackathon-competition)
-
-<!-- Before final submission, add 2–3 compressed screenshots under docs/screenshots/ and place a short Product Preview section near the top of this README. -->
