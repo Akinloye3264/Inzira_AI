@@ -1,0 +1,16 @@
+.git
+.github
+.venv
+__pycache__
+.pytest_cache
+.streamlit/secrets.toml
+.env
+Microdata.zip
+Cross_Section
+runs
+logs
+tests
+scripts
+data
+*.csv
+*.dta

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from datetime import date, datetime, timedelta
 from html import escape
 from pathlib import Path
@@ -9,6 +10,7 @@ import pandas as pd
 import streamlit as st
 
 from src.inzira.action_plans import ActionPlan, build_action_plans
+from src.inzira.api_client import InferenceAPIError, run_remote_screening
 from src.inzira.case_store import CaseStoreError, MongoCaseStore
 from src.inzira.copy import EXTRA_COPY, IMPACT_COPY, OPPORTUNITY_COPY
 from src.inzira.features import (
@@ -68,6 +70,34 @@ def _secret_section(name: str) -> dict[str, Any]:
         return {}
 
 
+def run_configured_screening(
+    bundle: RuntimeBundle,
+    assessment: Any,
+    answers: dict[str, Any],
+) -> tuple[ScreeningResult, str]:
+    """Use the deployed API when configured, with local inference as a safe fallback."""
+    api_config = _secret_section("api")
+    api_url = str(
+        os.environ.get("INZIRA_API_URL") or api_config.get("url", "")
+    ).strip()
+    api_key = str(
+        os.environ.get("INZIRA_API_KEY") or api_config.get("key", "")
+    ).strip()
+    if not api_url:
+        return run_screening(bundle, assessment), "local"
+    try:
+        return (
+            run_remote_screening(
+                api_url=api_url,
+                api_key=api_key,
+                answers=answers,
+            ),
+            "api",
+        )
+    except InferenceAPIError:
+        return run_screening(bundle, assessment), "local_fallback"
+
+
 def require_admin_access(language: str) -> tuple[str, MongoCaseStore | None] | None:
     """Authenticate and authorize one of the explicitly allowlisted admins."""
     auth_config = _secret_section("auth")
@@ -92,7 +122,7 @@ def require_admin_access(language: str) -> tuple[str, MongoCaseStore | None] | N
         st.button(
             "Continue with Google" if language == "en" else "Komeza ukoresheje Google",
             type="primary",
-            use_container_width=True,
+            width="stretch",
             on_click=st.login,
         )
         return None
@@ -159,16 +189,16 @@ def inject_styles() -> None:
         """
         <style>
         :root {
-            --ink: #f7f3ea;
-            --muted: #aaa59b;
-            --gold: #e2a52b;
-            --gold-dark: #f1b63d;
-            --gold-soft: rgba(226,165,43,.14);
-            --ivory: #090908;
-            --white: #151513;
-            --line: #302e29;
-            --success: #7fc8a7;
-            --shadow: 0 18px 48px rgba(0,0,0,.28);
+            --ink: #2c2c2c;
+            --muted: #6f6963;
+            --gold: #7a1f3d;
+            --gold-dark: #541329;
+            --gold-soft: rgba(122,31,61,.10);
+            --ivory: #f5f2eb;
+            --white: #fffdf9;
+            --line: #ddd4c9;
+            --success: #7a8b74;
+            --shadow: 0 18px 48px rgba(74,42,48,.12);
         }
         html, body, [class*="css"] { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
         .stApp { background: var(--ivory); color: var(--ink); font-size:16px; }
@@ -180,26 +210,26 @@ def inject_styles() -> None:
         p, label, .stMarkdown { line-height:1.55; }
         .topbar { display:flex; align-items:center; gap:.72rem; min-height:52px; }
         .brand-mark { display:grid; place-items:center; width:42px; height:42px; border-radius:14px;
-            background:linear-gradient(145deg,#f5c65e,var(--gold)); color:#17140e; font-weight:900;
-            box-shadow:0 7px 18px rgba(168,111,13,.18); }
+            background:linear-gradient(145deg,#9b3458,var(--gold)); color:#fffaf2; font-weight:900;
+            box-shadow:0 7px 18px rgba(122,31,61,.22); }
         .brand-name { font-size:1.2rem; font-weight:850; color:var(--ink); }
         .brand-caption { color:var(--muted); font-size:.68rem; font-weight:700; letter-spacing:.09em; }
-        .hero { background:radial-gradient(circle at 50% 115%,rgba(226,165,43,.18),transparent 42%),linear-gradient(145deg,#0b0b0a,#11110f);
-            border:1px solid var(--line); border-radius:20px; padding:clamp(1.45rem,5vw,3.25rem);
+        .hero { background:radial-gradient(circle at 88% 110%,rgba(200,109,81,.38),transparent 40%),linear-gradient(145deg,#4f1329,#7a1f3d 62%,#8d2d4d);
+            border:1px solid #6b1935; border-radius:22px; padding:clamp(1.45rem,5vw,3.25rem);
             box-shadow:var(--shadow); overflow:hidden; position:relative; }
         .hero-grid { display:grid; grid-template-columns:1fr; max-width:780px; margin:0 auto; text-align:center; }
-        .hero .eyebrow { color:var(--gold-dark); font-size:.73rem; font-weight:850; letter-spacing:.13em; }
-        .hero h1 { max-width:660px; margin:.55rem 0 .8rem; }
-        .hero p { max-width:640px; margin:0 auto; font-size:1.05rem; color:var(--muted); }
+        .hero .eyebrow { color:#f0c8b8; font-size:.73rem; font-weight:850; letter-spacing:.13em; }
+        .hero h1 { max-width:660px; margin:.55rem 0 .8rem; color:#fffaf5; }
+        .hero p { max-width:640px; margin:0 auto; font-size:1.05rem; color:#eadbd5; }
         .trust-row { display:flex; justify-content:center; flex-wrap:wrap; gap:.5rem; margin-top:1.15rem; }
         .trust-chip { display:inline-flex; align-items:center; gap:.35rem; padding:.46rem .7rem;
-            border:1px solid #5c4820; border-radius:999px; background:#1a1916;
-            color:#f2c35b; font-size:.78rem; font-weight:750; }
+            border:1px solid rgba(255,255,255,.24); border-radius:999px; background:rgba(62,10,29,.32);
+            color:#fff3eb; font-size:.78rem; font-weight:750; }
         .path-mark { display:none; }
-        .path-orbit { width:160px; height:160px; border-radius:50%; border:22px solid rgba(226,165,43,.18);
-            position:relative; box-shadow:inset 0 0 0 1px rgba(168,111,13,.12); }
+        .path-orbit { width:160px; height:160px; border-radius:50%; border:22px solid rgba(122,31,61,.15);
+            position:relative; box-shadow:inset 0 0 0 1px rgba(122,31,61,.12); }
         .path-orbit:before { content:""; position:absolute; inset:21px; border-radius:50%;
-            background:linear-gradient(145deg,#f7c75f,var(--gold)); box-shadow:0 16px 28px rgba(168,111,13,.2); }
+            background:linear-gradient(145deg,#9b3458,var(--gold)); box-shadow:0 16px 28px rgba(122,31,61,.2); }
         .path-orbit:after { content:"→"; position:absolute; inset:0; display:grid; place-items:center;
             color:var(--ink); font-size:2.3rem; font-weight:900; transform:rotate(-18deg); }
         .section-card, [data-testid="stVerticalBlockBorderWrapper"] { background:var(--white);
@@ -208,16 +238,16 @@ def inject_styles() -> None:
         .question-kicker { color:var(--gold-dark); text-transform:uppercase; letter-spacing:.1em;
             font-size:.75rem; font-weight:800; margin-bottom:.4rem; }
         .result-card { border-radius:20px; padding:clamp(1.25rem,4vw,2.25rem); margin:.8rem 0 1.1rem;
-            border:1px solid var(--line); background:linear-gradient(145deg,#151513,#11110f); box-shadow:var(--shadow); }
-        .result-card.elevated { border-color:#74561e; background:linear-gradient(145deg,#1e1a11,#121210); }
+            border:1px solid var(--line); background:linear-gradient(145deg,#fffdf9,#f7f1e9); box-shadow:var(--shadow); }
+        .result-card.elevated { border-color:#c9a1ae; background:linear-gradient(145deg,#fff8f7,#f7e8eb); }
         .result-card h2 { margin:.3rem 0 .7rem; }
         .support-card { background:var(--white); border:1px solid var(--line); border-left:4px solid var(--gold);
             border-radius:16px; padding:1rem 1.1rem; }
         .support-card h4 { color:var(--ink); margin:.1rem 0 .55rem; font-size:1.08rem; }
         .support-card p { font-size:.94rem; }
         .support-reason, .metric-note { color:var(--muted); }
-        .notice { border-radius:13px; padding:.85rem 1rem; background:#1d1910;
-            border:1px solid #5c4820; margin:.65rem 0; }
+        .notice { border-radius:13px; padding:.85rem 1rem; background:#f7e8eb;
+            border:1px solid #d7b3bd; margin:.65rem 0; }
         .metric-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:.7rem; margin:.8rem 0 1rem; }
         .metric-card { background:var(--white); border:1px solid var(--line); border-radius:15px; padding:.9rem; min-height:92px; }
         .metric-value { color:var(--ink); font-size:1.5rem; font-weight:850; line-height:1.15; }
@@ -227,16 +257,16 @@ def inject_styles() -> None:
             border-radius:12px !important; min-height:44px; padding:.58rem 1rem; font-weight:760;
             border:1px solid var(--gold); transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
         }
-        .stButton > button[kind="primary"] { background:var(--gold); color:#2d210f; }
+        .stButton > button[kind="primary"] { background:var(--gold); color:#fffaf5; }
         .stButton > button:hover, .stDownloadButton > button:hover, .stLinkButton > a:hover {
-            border-color:var(--gold-dark); color:var(--gold-dark); transform:translateY(-1px); box-shadow:0 8px 18px rgba(168,111,13,.12); }
+            border-color:var(--gold-dark); color:var(--gold-dark); transform:translateY(-1px); box-shadow:0 8px 18px rgba(122,31,61,.14); }
         button:focus-visible, a:focus-visible, input:focus-visible { outline:3px solid var(--gold) !important; outline-offset:2px; }
         div[role="radiogroup"] { gap:.35rem; }
         .st-key-main_page { position:sticky; top:.5rem; z-index:100; margin:.35rem 0 1rem; }
-        .st-key-main_page [data-testid="stButtonGroup"] { background:rgba(18,18,16,.94); border:1px solid var(--line);
-            border-radius:15px; padding:.35rem; box-shadow:0 8px 24px rgba(74,53,17,.07); backdrop-filter:blur(12px); }
+        .st-key-main_page [data-testid="stButtonGroup"] { background:rgba(255,253,249,.94); border:1px solid var(--line);
+            border-radius:15px; padding:.35rem; box-shadow:0 8px 24px rgba(74,42,48,.08); backdrop-filter:blur(12px); }
         .st-key-main_page button { min-height:44px; border-radius:11px !important; font-weight:760; }
-        .st-key-language [data-testid="stButtonGroup"] { background:#11110f; border:1px solid var(--line);
+        .st-key-language [data-testid="stButtonGroup"] { background:#fffdf9; border:1px solid var(--line);
             border-radius:12px; padding:.25rem; }
         .st-key-language button { min-height:40px; border-radius:9px !important; font-weight:720; }
         .st-key-start_assessment { max-width:360px; margin:1rem auto 0; }
@@ -244,9 +274,9 @@ def inject_styles() -> None:
             border-radius:14px; padding:.3rem; margin:.6rem 0 1rem; flex-wrap:wrap; }
         .st-key-staff_section button { min-height:44px; border-radius:10px !important; }
         .staff-badge { display:inline-flex; gap:.4rem; align-items:center; padding:.42rem .68rem; border-radius:999px;
-            background:#211c10; border:1px solid #664e1c; color:#f2c35b; font-size:.78rem; font-weight:760; }
+            background:#eef1eb; border:1px solid #b9c3b4; color:#52634d; font-size:.78rem; font-weight:760; }
         [data-testid="stForm"] { background:var(--white); border:1px solid var(--line); border-radius:18px; padding:clamp(.9rem,3vw,1.35rem); }
-        [data-testid="stExpander"] { border-color:var(--line) !important; border-radius:14px !important; background:rgba(21,21,19,.72); }
+        [data-testid="stExpander"] { border-color:var(--line) !important; border-radius:14px !important; background:rgba(255,253,249,.82); }
         hr { border-color:var(--line); }
         .app-footer { margin-top:2rem; padding-top:1rem; border-top:1px solid var(--line);
             color:var(--muted); font-size:.8rem; }
@@ -269,8 +299,8 @@ def inject_styles() -> None:
             .trust-chip { font-size:.73rem; padding:.38rem .58rem; }
             .st-key-main_page { position:fixed; top:auto; left:0; right:0; bottom:0; z-index:999;
                 margin:0; padding:.45rem .55rem calc(.45rem + env(safe-area-inset-bottom));
-                background:rgba(9,9,8,.96); border-top:1px solid var(--line); }
-            .st-key-main_page [data-testid="stButtonGroup"] { border:0; box-shadow:0 -8px 24px rgba(74,53,17,.08);
+                background:rgba(245,242,235,.96); border-top:1px solid var(--line); }
+            .st-key-main_page [data-testid="stButtonGroup"] { border:0; box-shadow:0 -8px 24px rgba(74,42,48,.08);
                 padding:.25rem; width:100%; }
             .st-key-main_page button { min-height:48px; padding:.35rem .25rem !important; font-size:.76rem !important;
                 white-space:normal !important; line-height:1.15 !important; }
@@ -297,6 +327,7 @@ def initialize_state() -> None:
         "assessment_step": 0,
         "assessment_result": None,
         "assessment_answers": {},
+        "inference_source": "local",
         "completion_mode": "self",
         "opportunity_profile": None,
         "opportunity_step": 0,
@@ -325,6 +356,7 @@ def reset_assessment() -> None:
     st.session_state.assessment_step = 0
     st.session_state.assessment_result = None
     st.session_state.assessment_answers = {}
+    st.session_state.inference_source = "local"
 
 
 def persist_widget_answer(field: str) -> None:
@@ -487,7 +519,7 @@ def navigation_buttons(
 ) -> None:
     left, _, right = st.columns([1, 2, 1])
     with left:
-        if st.button("← " + back_label, use_container_width=True):
+        if st.button("← " + back_label, width="stretch"):
             persist_visible_answers()
             if st.session_state.assessment_step == 0:
                 st.session_state.assessment_started = False
@@ -495,7 +527,7 @@ def navigation_buttons(
                 st.session_state.assessment_step -= 1
             st.rerun()
     with right:
-        if st.button(next_label + " →", type=next_type, use_container_width=True):
+        if st.button(next_label + " →", type=next_type, width="stretch"):
             persist_visible_answers()
             if on_next is None or on_next():
                 st.session_state.assessment_step += 1
@@ -656,18 +688,21 @@ def render_review(
 
     left, _, right = st.columns([1, 2, 1])
     with left:
-        if st.button("← " + base["general"]["back"], use_container_width=True):
+        if st.button("← " + base["general"]["back"], width="stretch"):
             st.session_state.assessment_step -= 1
             st.rerun()
     with right:
         if st.button(
-            base["general"]["submit"], type="primary", use_container_width=True
+            base["general"]["submit"], type="primary", width="stretch"
         ):
             if assessment.completeness < bundle.configuration["minimum_answered_fraction"]:
                 st.error(base["results"]["insufficient_title"])
             else:
                 try:
-                    result = run_screening(bundle, assessment)
+                    result, inference_source = run_configured_screening(
+                        bundle, assessment, get_answers()
+                    )
+                    st.session_state.inference_source = inference_source
                     st.session_state.assessment_result = {
                         "score": result.score,
                         "threshold": result.threshold,
@@ -773,6 +808,26 @@ def render_result(
             ]
         )
         st.caption(copy["score_explainer"])
+        inference_labels = {
+            "api": (
+                "Model service: secure FastAPI backend"
+                if language == "en"
+                else "Serivisi ya model: FastAPI irinzwe"
+            ),
+            "local_fallback": (
+                "Model service: verified local fallback"
+                if language == "en"
+                else "Serivisi ya model: uburyo bwa local bwagenzuwe"
+            ),
+            "local": (
+                "Model service: verified in-app model"
+                if language == "en"
+                else "Serivisi ya model: model yagenzuwe iri muri porogaramu"
+            ),
+        }
+        st.caption(
+            inference_labels.get(st.session_state.inference_source, inference_labels["local"])
+        )
 
     st.info(base["safeguards"]["screening_warning"] + " " + base["safeguards"]["human_review"])
     st.subheader(copy["plan_title"])
@@ -805,7 +860,7 @@ def render_result(
         link_columns = st.columns(len(primary_plan.links))
         for link_column, link in zip(link_columns, primary_plan.links):
             with link_column:
-                st.link_button(link.label, link.url, use_container_width=True)
+                st.link_button(link.label, link.url, width="stretch")
 
     alternatives_label = "Other support options" if language == "en" else "Izindi nzira z'ubufasha"
     with st.expander(alternatives_label):
@@ -823,7 +878,7 @@ def render_result(
     st.button(
         opportunity_copy["screening_cta"],
         type="primary",
-        use_container_width=True,
+        width="stretch",
         on_click=open_opportunities,
     )
 
@@ -835,11 +890,11 @@ def render_result(
             data=summary.encode("utf-8"),
             file_name="inzira_screening_summary.txt",
             mime="text/plain",
-            use_container_width=True,
+            width="stretch",
         )
     with right:
         if st.button(
-            base["general"]["restart"], type="primary", use_container_width=True
+            base["general"]["restart"], type="primary", width="stretch"
         ):
             reset_assessment()
             st.rerun()
@@ -874,7 +929,7 @@ def render_landing(base: dict[str, Any], copy: dict[str, str]) -> None:
     if st.button(
         copy["hero_cta"],
         type="primary",
-        use_container_width=True,
+        width="stretch",
         key="start_assessment",
     ):
         st.session_state.assessment_started = True
@@ -1073,7 +1128,7 @@ def render_opportunity_matcher(language: str) -> None:
             if st.button(
                 "Continue →" if language == "en" else "Komeza →",
                 type="primary",
-                use_container_width=True,
+                width="stretch",
                 key="opp_goal_continue",
             ):
                 if not st.session_state.opp_goals:
@@ -1105,7 +1160,7 @@ def render_opportunity_matcher(language: str) -> None:
             with back_column:
                 if st.button(
                     "← Back" if language == "en" else "← Subira inyuma",
-                    use_container_width=True,
+                    width="stretch",
                     key="opp_profile_back",
                 ):
                     _save_opportunity_draft(("participant_profiles", "skills"))
@@ -1115,7 +1170,7 @@ def render_opportunity_matcher(language: str) -> None:
                 if st.button(
                     "Continue →" if language == "en" else "Komeza →",
                     type="primary",
-                    use_container_width=True,
+                    width="stretch",
                     key="opp_profile_continue",
                 ):
                     if not st.session_state.opp_participant_profiles:
@@ -1153,7 +1208,7 @@ def render_opportunity_matcher(language: str) -> None:
             with back_column:
                 if st.button(
                     "← Back" if language == "en" else "← Subira inyuma",
-                    use_container_width=True,
+                    width="stretch",
                     key="opp_support_back",
                 ):
                     _save_opportunity_draft(("support_types", "access_mode", "readiness"))
@@ -1163,7 +1218,7 @@ def render_opportunity_matcher(language: str) -> None:
                 if st.button(
                     copy["match_button"],
                     type="primary",
-                    use_container_width=True,
+                    width="stretch",
                     key="opp_match_submit",
                 ):
                     _save_opportunity_draft(("support_types", "access_mode", "readiness"))
@@ -1249,9 +1304,9 @@ def render_opportunity_matcher(language: str) -> None:
 
             link_one, link_two = st.columns(2)
             with link_one:
-                st.link_button(copy["official"], opportunity.apply_url, use_container_width=True)
+                st.link_button(copy["official"], opportunity.apply_url, width="stretch")
             with link_two:
-                st.link_button(copy["source"], opportunity.source_url, use_container_width=True)
+                st.link_button(copy["source"], opportunity.source_url, width="stretch")
             shortlist, tracker = st.columns(2)
             with shortlist:
                 st.checkbox(copy["shortlist"], key=f"opp_shortlist_{opportunity.id}")
@@ -1259,7 +1314,7 @@ def render_opportunity_matcher(language: str) -> None:
                 st.button(
                     IMPACT_COPY[language]["track"],
                     key=f"track_{opportunity.id}",
-                    use_container_width=True,
+                    width="stretch",
                     on_click=open_case_tracker,
                     args=(opportunity.id,),
                 )
@@ -1275,7 +1330,7 @@ def render_opportunity_matcher(language: str) -> None:
         data=opportunity_plan_text(plan_matches, language, copy).encode("utf-8"),
         file_name="inzira_opportunity_plan.txt",
         mime="text/plain",
-        use_container_width=True,
+        width="stretch",
     )
 
 
@@ -1316,7 +1371,7 @@ def render_staff_create(
             key="case_create_followup",
         )
         create_submitted = st.form_submit_button(
-            copy["create"], type="primary", use_container_width=True
+            copy["create"], type="primary", width="stretch"
         )
     screening_route = _case_screening_route(language)
     st.caption(
@@ -1410,7 +1465,7 @@ def render_staff_update(
             copy["followup"], value=current_followup, key="case_update_followup"
         )
         update_submitted = st.form_submit_button(
-            copy["save"], type="primary", use_container_width=True
+            copy["save"], type="primary", width="stretch"
         )
     if update_submitted:
         updated = update_case_record(
@@ -1489,7 +1544,7 @@ def render_staff_dashboard(language: str, copy: dict[str, Any]) -> None:
                 }
                 for record in due_records
             ],
-            use_container_width=True,
+            width="stretch",
             hide_index=True,
         )
 
@@ -1521,7 +1576,7 @@ def render_staff_dashboard(language: str, copy: dict[str, Any]) -> None:
             }
             for record in filtered_records
         ],
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
@@ -1536,7 +1591,7 @@ def render_staff_data(
         data=records_to_csv(records).encode("utf-8"),
         file_name="inzira_anonymous_case_records.csv",
         mime="text/csv",
-        use_container_width=True,
+        width="stretch",
     )
     with st.form("import_case_form"):
         upload = st.file_uploader(copy["upload"], type=["csv"], key="case_import_upload")
@@ -1579,7 +1634,7 @@ def render_admin_opportunities(language: str, opportunities: list[Any]) -> None:
     )
     st.dataframe(
         frame,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         column_config={
             "Official route": st.column_config.LinkColumn("Official route"),
@@ -1621,7 +1676,7 @@ def render_admin_settings(
         try:
             activity = store.recent_audit()
             if activity:
-                st.dataframe(activity, use_container_width=True, hide_index=True)
+                st.dataframe(activity, width="stretch", hide_index=True)
             else:
                 st.caption(
                     "No admin activity recorded yet."
@@ -1632,7 +1687,7 @@ def render_admin_settings(
             st.error(str(exc))
         st.button(
             "Sign out" if language == "en" else "Sohoka",
-            use_container_width=True,
+            width="stretch",
             on_click=st.logout,
         )
     else:
