@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from datetime import date, datetime, timedelta
 from html import escape
 from pathlib import Path
@@ -10,7 +9,6 @@ import pandas as pd
 import streamlit as st
 
 from src.inzira.action_plans import ActionPlan, build_action_plans
-from src.inzira.api_client import InferenceAPIError, run_remote_screening
 from src.inzira.case_store import CaseStoreError, MongoCaseStore
 from src.inzira.copy import EXTRA_COPY, IMPACT_COPY, OPPORTUNITY_COPY
 from src.inzira.features import (
@@ -68,34 +66,6 @@ def _secret_section(name: str) -> dict[str, Any]:
         return dict(st.secrets[name]) if name in st.secrets else {}
     except (FileNotFoundError, KeyError):
         return {}
-
-
-def run_configured_screening(
-    bundle: RuntimeBundle,
-    assessment: Any,
-    answers: dict[str, Any],
-) -> tuple[ScreeningResult, str]:
-    """Use the deployed API when configured, with local inference as a safe fallback."""
-    api_config = _secret_section("api")
-    api_url = str(
-        os.environ.get("INZIRA_API_URL") or api_config.get("url", "")
-    ).strip()
-    api_key = str(
-        os.environ.get("INZIRA_API_KEY") or api_config.get("key", "")
-    ).strip()
-    if not api_url:
-        return run_screening(bundle, assessment), "local"
-    try:
-        return (
-            run_remote_screening(
-                api_url=api_url,
-                api_key=api_key,
-                answers=answers,
-            ),
-            "api",
-        )
-    except InferenceAPIError:
-        return run_screening(bundle, assessment), "local_fallback"
 
 
 def require_admin_access(language: str) -> tuple[str, MongoCaseStore | None] | None:
@@ -327,7 +297,6 @@ def initialize_state() -> None:
         "assessment_step": 0,
         "assessment_result": None,
         "assessment_answers": {},
-        "inference_source": "local",
         "completion_mode": "self",
         "opportunity_profile": None,
         "opportunity_step": 0,
@@ -356,7 +325,6 @@ def reset_assessment() -> None:
     st.session_state.assessment_step = 0
     st.session_state.assessment_result = None
     st.session_state.assessment_answers = {}
-    st.session_state.inference_source = "local"
 
 
 def persist_widget_answer(field: str) -> None:
@@ -699,10 +667,7 @@ def render_review(
                 st.error(base["results"]["insufficient_title"])
             else:
                 try:
-                    result, inference_source = run_configured_screening(
-                        bundle, assessment, get_answers()
-                    )
-                    st.session_state.inference_source = inference_source
+                    result = run_screening(bundle, assessment)
                     st.session_state.assessment_result = {
                         "score": result.score,
                         "threshold": result.threshold,
@@ -808,25 +773,10 @@ def render_result(
             ]
         )
         st.caption(copy["score_explainer"])
-        inference_labels = {
-            "api": (
-                "Model service: secure FastAPI backend"
-                if language == "en"
-                else "Serivisi ya model: FastAPI irinzwe"
-            ),
-            "local_fallback": (
-                "Model service: verified local fallback"
-                if language == "en"
-                else "Serivisi ya model: uburyo bwa local bwagenzuwe"
-            ),
-            "local": (
-                "Model service: verified in-app model"
-                if language == "en"
-                else "Serivisi ya model: model yagenzuwe iri muri porogaramu"
-            ),
-        }
         st.caption(
-            inference_labels.get(st.session_state.inference_source, inference_labels["local"])
+            "Prediction runs securely inside this app using the verified Lite model."
+            if language == "en"
+            else "Iteganyagihe rikorerwa muri iyi porogaramu hakoreshejwe model Lite yagenzuwe."
         )
 
     st.info(base["safeguards"]["screening_warning"] + " " + base["safeguards"]["human_review"])

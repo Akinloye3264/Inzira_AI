@@ -21,22 +21,11 @@ The application is **decision support only**. It must never approve, deny, or wi
 - Anonymous referral creation, structured follow-up and an admin audit trail
 - MongoDB-backed referral dashboard for applications, outcomes and overdue follow-ups
 - Reviewed opportunity directory plus schema-validated CSV export and restore
-- Versioned FastAPI inference service with health checks, request validation and optional API-key protection
-- Streamlit-to-FastAPI integration with automatic local-model fallback for demo reliability
+- Direct, in-app model inference with one cached model bundle for a simple Streamlit deployment
 
 ## Architecture
 
-The repository supports two deployment modes:
-
-1. **Single-service demo:** Streamlit loads the verified model and performs inference in-process. This is the simplest hackathon deployment.
-2. **Separated production path:** Streamlit is the frontend and calls the FastAPI service over HTTPS. FastAPI owns model loading and inference. If the configured API is temporarily unavailable, the Streamlit app safely falls back to the same local model.
-
-FastAPI exposes:
-
-- `GET /health`
-- `GET /v1/model-info`
-- `POST /v1/screenings`
-- Interactive API documentation at `/docs`
+Inzira AI is deployed as one Streamlit application. Streamlit renders the public screening, opportunity matcher and authenticated admin workspace, while the verified Lite model runs directly in the same process. The model bundle is cached with `st.cache_resource`, so it is loaded once per running app instance. MongoDB stores only anonymous referral and follow-up records; public screening answers remain in the visitor's Streamlit session.
 
 ## Model evidence
 
@@ -64,22 +53,6 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Run the API in another terminal:
-
-```bash
-pip install -r requirements-api.txt
-export INZIRA_API_KEY="replace-with-a-long-random-value"
-uvicorn api.main:app --host 0.0.0.0 --port 8000
-```
-
-Then add this to local `.streamlit/secrets.toml`:
-
-```toml
-[api]
-url = "http://localhost:8000"
-key = "replace-with-the-same-long-random-value"
-```
-
 On WSL from this repository:
 
 ```bash
@@ -94,7 +67,7 @@ streamlit run app.py
 ## Verify before deployment
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -r requirements.txt pytest
 python -m pytest -q
 python scripts/smoke_inference.py
 python scripts/smoke_ui.py
@@ -122,17 +95,6 @@ python -c "import secrets; print(secrets.token_urlsafe(48))"
 
 Never commit `.streamlit/secrets.toml`, the Google client secret or the MongoDB URI. The repository already ignores the local secrets file.
 
-## Deploy the FastAPI backend
-
-`render.yaml` provides a deployable Render Blueprint. Connect this repository in Render and create the `inzira-ai-api` web service. When Render asks for `INZIRA_API_KEY`, enter a long random value. Put that same value in the Streamlit `[api].key` secret and set `[api].url` to the API's HTTPS `onrender.com` URL.
-
-You can also build `Dockerfile.api` on any container host:
-
-```bash
-docker build -f Dockerfile.api -t inzira-ai-api .
-docker run -p 8000:8000 -e INZIRA_API_KEY="your-secret" inzira-ai-api
-```
-
 ## Deploy on Streamlit Community Cloud
 
 1. Push this repository to GitHub. Do not add the EICV7 raw data or internal test predictions.
@@ -140,16 +102,15 @@ docker run -p 8000:8000 -e INZIRA_API_KEY="your-secret" inzira-ai-api
 3. Select the repository and set the main file to `app.py`.
 4. Select Python 3.12 if the deployment settings offer a version choice.
 5. Add the Google OIDC, admin allowlist and MongoDB values in the app's Secrets settings.
-6. Optionally add the deployed FastAPI URL and matching API key under `[api]`. Without these values, local inference remains active.
-7. Deploy, then complete one English and one Kinyarwanda assessment and one authenticated referral journey.
+6. Deploy, then complete one English and one Kinyarwanda assessment and one authenticated referral journey.
+
+Community Cloud hibernates an app after 12 hours without traffic. A visitor can wake it from the sleep page. The application does not use a self-ping; a sleeping process cannot execute one, and the cached model already minimizes repeated loading while the app is running.
 
 ## Repository structure
 
 ```text
 app.py                         Streamlit interface
-api/main.py                    Versioned FastAPI model service
 src/inzira/                    Features, inference, referrals and opportunity ranking
-src/inzira/api_client.py       Streamlit-to-FastAPI client with local fallback
 src/inzira/case_store.py       MongoDB referral persistence and admin audit trail
 data/opportunities.json        Reviewed official pathway catalogue (not a live vacancy feed)
 tests/                         Unit tests
@@ -158,12 +119,7 @@ scripts/smoke_impact_dashboard.py  Caseworker workflow check
 artifacts/inzira_lite_v1_*/    Verified deployment bundle and model evidence
 .streamlit/config.toml         Theme and privacy-oriented settings
 .streamlit/secrets.example.toml  Safe configuration template; contains no real secrets
-requirements-core.txt          Shared model runtime dependencies
-requirements.txt               Streamlit frontend dependencies
-requirements-api.txt           FastAPI backend dependencies
-requirements-dev.txt           Combined verification dependencies
-render.yaml                    Render backend deployment blueprint
-Dockerfile.api                 Portable API container
+requirements.txt               Streamlit, model and MongoDB dependencies
 ```
 
 ## Responsible use
