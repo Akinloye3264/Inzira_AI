@@ -27,10 +27,10 @@ PLAN_CONTENT = {
         "Employment and enterprise": {
             "title": "Employment and skills pathway",
             "outcome": "Connect one work-ready household member to a suitable job, internship or skills route.",
-            "service": "Kora Job Portal and Rwanda TVET Board",
+            "service": "MIFOTRA Recruitment Portal and Rwanda TVET Board",
             "steps": (
                 "Choose the household member who wants work and write down their existing skills and preferred type of work.",
-                "Create or update a free Kora profile, then search current jobs, internships and training opportunities.",
+                "Create or update a free MIFOTRA recruitment profile, then search current public-service vacancies.",
                 "If practical training is needed, use the RTB Career Portal or ask the nearest TVET school about a suitable course before paying any provider.",
             ),
             "prepare": (
@@ -39,7 +39,7 @@ PLAN_CONTENT = {
                 "A CV if available; the app does not need a copy",
             ),
             "links": (
-                ("Open Kora Job Portal", "https://jobportal.kora.rw/"),
+                ("Open MIFOTRA Recruitment Portal", "https://www.recruitment.mifotra.gov.rw/us/"),
                 ("Open RTB Career Portal", "https://tvetcareerportal.rtb.gov.rw/"),
             ),
         },
@@ -136,14 +136,14 @@ PLAN_CONTENT = {
         "Employment and enterprise": {
             "title": "Inzira y'akazi n'ubumenyi",
             "outcome": "Guhuza umuntu wo mu rugo ushaka gukora n'akazi, kwimenyereza umwuga cyangwa amahugurwa bimukwiriye.",
-            "service": "Kora Job Portal na Rwanda TVET Board",
+            "service": "Urubuga rwa MIFOTRA rwo gushaka abakozi na Rwanda TVET Board",
             "steps": (
                 "Hitamo umuntu wo mu rugo ushaka akazi, mwandike ubumenyi asanganywe n'akazi yifuza.",
-                "Fungura cyangwa uvugurure konti ya Kora ku buntu, ushakishe akazi, kwimenyereza umwuga n'amahugurwa ahari.",
+                "Fungura cyangwa uvugurure konti ku rubuga rwa MIFOTRA, ushakishe imyanya y'akazi ka Leta ihari.",
                 "Niba akeneye umwuga ngiro, koresha RTB Career Portal cyangwa ubaze ishuri rya TVET riri hafi mbere yo kwishyura.",
             ),
             "prepare": ("Amashuri n'ubumenyi asanganywe", "Telefoni cyangwa imeyili", "CV niba ihari; ntuyishyire muri iyi porogaramu"),
-            "links": (("Fungura Kora Job Portal", "https://jobportal.kora.rw/"), ("Fungura RTB Career Portal", "https://tvetcareerportal.rtb.gov.rw/")),
+            "links": (("Fungura urubuga rwa MIFOTRA", "https://www.recruitment.mifotra.gov.rw/us/"), ("Fungura RTB Career Portal", "https://tvetcareerportal.rtb.gov.rw/")),
         },
         "Health-insurance inclusion": {
             "title": "Kuzuza cyangwa gusubizaho Mutuelle",

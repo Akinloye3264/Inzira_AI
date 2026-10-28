@@ -159,6 +159,23 @@ The matcher uses a reviewed catalogue of official or provider-operated service p
 
 The platform does not submit applications or CVs. Users continue to official provider websites, where the provider controls current availability, eligibility and acceptance. Administrators do not approve jobs or programme benefits; they only record anonymous referrals and provider-reported progress.
 
+## Administrator role and permissions
+
+The hackathon prototype currently has one protected **Administrator** role. Firebase Email/Password verifies the identity, and an email allowlist provides a second authorisation check. Every allowlisted administrator currently has the same permissions.
+
+| Administrator can | Administrator cannot |
+|---|---|
+| Create anonymous referral records after consent | Approve employment, benefits, credit, insurance or programme eligibility |
+| Update referral status, provider-reported outcome and barrier | Change the trained model, predictor definitions or frozen threshold |
+| Set and review follow-up dates | Read public users' unsaved screening answers |
+| View aggregate referral metrics and overdue follow-ups | Edit the opportunity catalogue from the dashboard |
+| Export or import the referral CSV schema | Create Firebase users or alter the admin allowlist inside the app |
+| Review the read-only opportunity directory and administrator audit history | Replace the decision of an official service provider |
+
+Referral changes are written to Neon PostgreSQL, persist after application restarts, and are visible to other authorised administrators after refresh. The audit table records the administrator email, action, case ID and timestamp. The prototype intentionally stores anonymous operational fields rather than names, national IDs, telephone numbers or free-text personal notes.
+
+Production deployment should separate super-administrator, case-officer and read-only reviewer permissions instead of giving every allowlisted administrator the same access.
+
 ## Technical architecture
 
 ```text
