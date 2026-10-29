@@ -223,14 +223,14 @@ The public application does not require secrets. To run the separate administrat
 
 ## Deploy on Render
 
-The repository includes [`render.yaml`](render.yaml) for an always-on Render web service. It deploys the existing public Streamlit application, uses Python 3.12.8, binds Streamlit to Render's assigned port and exposes Streamlit's health endpoint.
+The repository includes [`render.yaml`](render.yaml) for a free Render web service. It deploys the existing public Streamlit application, uses Python 3.12.8, binds Streamlit to Render's assigned port and exposes Streamlit's health endpoint.
 
 1. In Render, choose **New > Blueprint** and connect this GitHub repository.
 2. Review the `inzira-ai-rwanda` service generated from `render.yaml`.
-3. Confirm the paid `0.5 CPU / 512 MB` instance before applying the Blueprint.
+3. Confirm the free instance before applying the Blueprint.
 4. After deployment, verify the application and `/_stcore/health` endpoint.
 
-The paid plan is intentional because free Render web services spin down after inactivity. The public application requires no environment variables. Deploy `admin_app.py` as a separate protected service only when its Neon and Firebase values can be entered directly in the Render dashboard.
+Free Render web services spin down after 15 minutes without inbound traffic. For the competition demonstration, an external uptime monitor can request `https://YOUR-RENDER-DOMAIN/_stcore/health` every five minutes. This is a lightweight health check, not a production uptime guarantee. Render currently provides 750 free instance-hours per workspace each month, so do not keep a second free service continuously awake from the same workspace. The public application requires no environment variables. Deploy `admin_app.py` as a separate protected service only when its Neon and Firebase values can be entered directly in the Render dashboard.
 
 Netlify cannot directly execute this long-running Python Streamlit/WebSocket server. Hosting a static Netlify page in front of Render would add another layer without preventing backend sleep, so Render is the production host for this version. A future Netlify deployment would require rebuilding the public interface as a static JavaScript frontend and exposing inference through a separate API.
 
