@@ -221,6 +221,19 @@ streamlit run app.py
 
 The public application does not require secrets. To run the separate administrator application, copy `.env.example` to `.env` and privately provide the Neon, Firebase and administrator allowlist configuration. Never commit `.env`, `.streamlit/secrets.toml`, administrator passwords or database connection strings.
 
+## Deploy on Render
+
+The repository includes [`render.yaml`](render.yaml) for an always-on Render web service. It deploys the existing public Streamlit application, uses Python 3.12.8, binds Streamlit to Render's assigned port and exposes Streamlit's health endpoint.
+
+1. In Render, choose **New > Blueprint** and connect this GitHub repository.
+2. Review the `inzira-ai-rwanda` service generated from `render.yaml`.
+3. Confirm the paid `0.5 CPU / 512 MB` instance before applying the Blueprint.
+4. After deployment, verify the application and `/_stcore/health` endpoint.
+
+The paid plan is intentional because free Render web services spin down after inactivity. The public application requires no environment variables. Deploy `admin_app.py` as a separate protected service only when its Neon and Firebase values can be entered directly in the Render dashboard.
+
+Netlify cannot directly execute this long-running Python Streamlit/WebSocket server. Hosting a static Netlify page in front of Render would add another layer without preventing backend sleep, so Render is the production host for this version. A future Netlify deployment would require rebuilding the public interface as a static JavaScript frontend and exposing inference through a separate API.
+
 ## Verification
 
 ```bash
