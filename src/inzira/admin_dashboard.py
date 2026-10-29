@@ -37,8 +37,11 @@ def inject_admin_styles() -> None:
             --cream:#f7f2ea; --paper:#fffdf9; --ink:#292421;
             --muted:#716761; --line:#e6d9d4; --sage:#71836d;
         }
+        #MainMenu, footer, [data-testid="stHeader"], [data-testid="stToolbar"],
+        [data-testid="stDecoration"], [data-testid="stStatusWidget"] {
+            display:none !important;
+        }
         [data-testid="stAppViewContainer"] { background:var(--cream); color:var(--ink); }
-        [data-testid="stHeader"] { background:rgba(247,242,234,.9); }
         .block-container { max-width:1320px; padding-top:1.2rem; padding-bottom:4rem; }
         h1,h2,h3 { color:var(--ink); letter-spacing:-.025em; }
         .admin-topbar { display:flex; align-items:center; justify-content:space-between; gap:1rem;

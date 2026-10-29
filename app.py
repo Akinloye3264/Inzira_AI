@@ -82,9 +82,13 @@ def inject_styles() -> None:
             --success: #7a8b74;
             --shadow: 0 18px 48px rgba(74,42,48,.12);
         }
+        #MainMenu, footer, [data-testid="stHeader"], [data-testid="stToolbar"],
+        [data-testid="stDecoration"], [data-testid="stStatusWidget"] {
+            display:none !important;
+        }
         html, body, [class*="css"] { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
         .stApp { background: var(--ivory); color: var(--ink); font-size:16px; }
-        .block-container { max-width: 1020px; padding: 3.75rem 1.25rem 3rem; }
+        .block-container { max-width: 1020px; padding: 2rem 1.25rem 3rem; }
         h1, h2, h3 { color:var(--ink); letter-spacing:-.025em; }
         h1 { font-size:clamp(2rem,5vw,3.45rem) !important; line-height:1.04 !important; }
         h2 { font-size:clamp(1.55rem,3vw,2.15rem) !important; }
@@ -169,7 +173,7 @@ def inject_styles() -> None:
                 flex:1 1 100% !important; min-width:100% !important; }
         }
         @media (max-width: 720px) {
-            .block-container { padding:3.65rem .85rem calc(6.4rem + env(safe-area-inset-bottom)); }
+            .block-container { padding:1.3rem .85rem calc(6.4rem + env(safe-area-inset-bottom)); }
             .topbar { min-height:46px; }
             .brand-mark { width:38px; height:38px; border-radius:12px; }
             .brand-caption { display:none; }
