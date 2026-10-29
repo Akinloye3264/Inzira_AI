@@ -2,7 +2,7 @@
 
 **NISR 2026 Big Data Hackathon — Track 2: Financial Inclusion & Poverty Reduction**
 
-[Open the live application](https://inzira-ai-rwanda.streamlit.app/) · [NISR 2026 competition](https://www.statistics.gov.rw/about/hackathon/2026-hackathon-competition)
+[Open the live application](https://inzira-ai-rwanda.onrender.com/) · [NISR 2026 competition](https://www.statistics.gov.rw/about/hackathon/2026-hackathon-competition)
 
 Inzira AI is a privacy-conscious household economic-vulnerability screening and opportunity-navigation platform for Rwanda. It converts 12 accessible question groups into an initial screening estimate, explains the result in plain language, proposes practical support pathways, and matches people with verified employment, training, enterprise, agriculture and social-protection opportunities.
 
@@ -230,7 +230,7 @@ The repository includes [`render.yaml`](render.yaml) for a free Render web servi
 3. Confirm the free instance before applying the Blueprint.
 4. After deployment, verify the application and `/_stcore/health` endpoint.
 
-Free Render web services spin down after 15 minutes without inbound traffic. For the competition demonstration, an external uptime monitor can request `https://YOUR-RENDER-DOMAIN/_stcore/health` every five minutes. This is a lightweight health check, not a production uptime guarantee. Render currently provides 750 free instance-hours per workspace each month, so do not keep a second free service continuously awake from the same workspace. The public application requires no environment variables. Deploy `admin_app.py` as a separate protected service only when its Neon and Firebase values can be entered directly in the Render dashboard.
+Free Render web services spin down after 15 minutes without inbound traffic. For the competition demonstration, an external uptime monitor can request `https://inzira-ai-rwanda.onrender.com/_stcore/health` every five minutes. This is a lightweight health check, not a production uptime guarantee. Render currently provides 750 free instance-hours per workspace each month, so do not keep a second free service continuously awake from the same workspace. The public application requires no environment variables. Deploy `admin_app.py` as a separate protected service only when its Neon and Firebase values can be entered directly in the Render dashboard.
 
 Netlify cannot directly execute this long-running Python Streamlit/WebSocket server. Hosting a static Netlify page in front of Render would add another layer without preventing backend sleep, so Render is the production host for this version. A future Netlify deployment would require rebuilding the public interface as a static JavaScript frontend and exposing inference through a separate API.
 
@@ -266,6 +266,6 @@ Inzira Tech declares that Inzira AI is the team's original submission for the NI
 
 ## Competition links
 
-- [Live public application](https://inzira-ai-rwanda.streamlit.app/)
+- [Live public application](https://inzira-ai-rwanda.onrender.com/)
 - [Public GitHub repository](https://github.com/Akinloye3264/Inzira_AI)
 - [NISR 2026 Big Data Hackathon](https://www.statistics.gov.rw/about/hackathon/2026-hackathon-competition)
